@@ -129,11 +129,3 @@ To ensure all AI prompts receive full context:
 
 ---
 
-## 🧾 Cursor Rule
-
-To generate public docs per milestone:
-```
-/generate-public-milestone-doc <milestone>
-```
-
-Saves to: `/docs/public/eigen-pilot-milestone-<n>/README.md`
