@@ -5,6 +5,7 @@ import { calculateYield } from '../projections/index.js';
 import { getProtocolData } from '../protocols/index.js';
 import { generateInsights } from '../insights/index.js';
 import { mockAIStrategy } from './mockAI.js';
+import YAML from 'yaml';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -21,17 +22,28 @@ export async function analyzeStrategy(strategyInput) {
     const promptPath = path.join(__dirname, '../../strategyAgentPrompt.txt');
     const promptTemplate = await fs.readFile(promptPath, 'utf-8');
 
+    // Load schema (now in YAML format)
+    const schemaPath = path.join(__dirname, '../../simulationPromptSchema.yaml');
+    const schemaContent = await fs.readFile(schemaPath, 'utf-8');
+    const schema = YAML.parse(schemaContent);
+
     // Get current protocol data
     const protocolData = await getProtocolData();
 
-    // Prepare input for AI model
+    // Prepare input for AI model according to the schema
     const aiInput = {
-      prompt: promptTemplate,
-      strategyInput: strategyInput,
-      protocolData: protocolData
+      userInput: strategyInput,
+      protocolData: protocolData,
+      marketContext: {
+        marketTrend: "neutral",
+        riskWarnings: []
+      }
     };
 
-    // In production, this would call the AI service
+    // Format the AI input using the schema structure
+    const formattedInput = formatInputAccordingToSchema(aiInput, schema);
+
+    // In production, this would call the AI service with the prompt and formatted input
     // For development, we use a mock AI response
     const strategy = await mockAIStrategy(strategyInput);
 
@@ -49,11 +61,24 @@ export async function analyzeStrategy(strategyInput) {
 }
 
 /**
+ * Format input according to our YAML schema
+ *
+ * @param {Object} input The raw input data
+ * @param {Object} schema The YAML schema to validate against
+ * @returns {Object} Formatted input that matches schema
+ */
+function formatInputAccordingToSchema(input, schema) {
+  // For now, we'll do a simple pass-through
+  // In production, we would validate against the schema and ensure all required fields
+  return input;
+}
+
+/**
  * Format user input for the AI model
  *
  * @param {Object} strategyInput User input object
  * @returns {string} Formatted input for the prompt
  */
 function formatInputForPrompt(strategyInput) {
-  return JSON.stringify(strategyInput, null, 2);
+  return YAML.stringify(strategyInput);
 }

@@ -1,0 +1,114 @@
+$schema: http://json-schema.org/draft-07/schema#
+title: EigenPilot Strategy Simulation Input
+description: Schema for the standardized input to strategy simulation prompts
+type: object
+required:
+  - userInput
+  - protocolData
+  - marketContext
+properties:
+  userInput:
+    type: object
+    required:
+      - intent
+      - inputAsset
+      - amount
+      - riskTolerance
+      - gasLimitEth
+      - timeHorizonDays
+    properties:
+      intent:
+        type: string
+        description: User's stated investment intent
+      inputAsset:
+        type: string
+        description: The asset to be used as input for the strategy
+      amount:
+        type: number
+        description: Amount of the input asset to invest
+      riskTolerance:
+        type: string
+        enum:
+          - low
+          - medium
+          - high
+        description: User's stated risk tolerance
+      gasLimitEth:
+        type: number
+        description: Maximum gas budget in ETH
+      timeHorizonDays:
+        type: integer
+        description: Investment time horizon in days
+  protocolData:
+    type: object
+    description: Current data for all supported DeFi protocols
+    properties:
+      lido:
+        type: object
+        properties:
+          stETHAPR:
+            type: number
+          tvl:
+            type: string
+          fee:
+            type: number
+      aave:
+        type: object
+        properties:
+          supplyRates:
+            type: object
+          borrowRates:
+            type: object
+          ltv:
+            type: object
+      eigenLayer:
+        type: object
+        properties:
+          baseAPR:
+            type: number
+          tvl:
+            type: string
+      gas:
+        type: object
+        properties:
+          current:
+            type: object
+          estimation:
+            type: object
+          ethPrice:
+            type: number
+  marketContext:
+    type: object
+    description: Relevant market conditions and insights
+    properties:
+      assetVolatility:
+        type: object
+        description: 30-day volatility metrics for relevant assets
+      marketTrend:
+        type: string
+        enum:
+          - bullish
+          - bearish
+          - neutral
+          - unknown
+        description: Current market sentiment
+      riskWarnings:
+        type: array
+        items:
+          type: string
+        description: Active risk warnings that may affect the strategy
+  simulationOptions:
+    type: object
+    description: Optional parameters to control simulation behavior
+    properties:
+      maxLoops:
+        type: integer
+        description: Maximum number of leverage loops to consider
+      slippageTolerance:
+        type: number
+        description: Maximum acceptable slippage for swaps
+      excludeProtocols:
+        type: array
+        items:
+          type: string
+        description: Protocols to explicitly exclude from consideration

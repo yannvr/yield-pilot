@@ -121,8 +121,19 @@ Rank routes based on net yield, risk, and sustainability using precomputed metri
 
 To ensure all AI prompts receive full context:
 
-1. **All simulation data must be passed as structured JSON**, using the schema in `simulationPromptSchema.json`
-2. **Prompt engine must merge static prompt text + dynamic simulation JSON**
+1. **All simulation data must be passed as structured YAML**, using the schema in `simulationPromptSchema.yaml`
+2. **Prompt engine must merge static prompt text + dynamic simulation YAML**
 3. **Prompts must always include: route, LTV, net yield, gas est, APY volatility, risk flags**
 4. **Prompt runners must track prompt versions in logs for auditability**
-5. **No AI step should rely on raw CLI input — always use structured simulation object** 
+5. **No AI step should rely on raw CLI input — always use structured simulation object**
+
+---
+
+## 🧾 Cursor Rule
+
+To generate public docs per milestone:
+```
+/generate-public-milestone-doc <milestone>
+```
+
+Saves to: `/docs/public/eigen-pilot-milestone-<n>/README.md`
