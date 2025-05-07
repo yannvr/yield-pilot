@@ -1,0 +1,19 @@
+{
+  "name": "@eigen-pilot/protocol-lido",
+  "version": "0.1.0",
+  "description": "Lido protocol plugin for EigenPilot",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "test": "node --test"
+  },
+  "keywords": [
+    "eigen-pilot",
+    "plugin",
+    "protocol",
+    "lido",
+    "steth"
+  ],
+  "author": "",
+  "license": "MIT"
+}

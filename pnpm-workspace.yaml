@@ -1,0 +1,12 @@
+packages:
+  # Core packages
+  - 'src/*'
+  # Future packages for modular plugins
+  - 'plugins/*'
+  # Web UI (future)
+  - 'web/*'
+  # Documentation
+  - 'docs/*'
+
+  # Exclude node_modules
+  - '!**/node_modules'
