@@ -1,10 +1,10 @@
-# EigenPilot Plugins
+# YieldPilot Plugins
 
-This directory contains modular plugins for EigenPilot, allowing extension of the core functionality with new protocols, risk models, data sources, and gas optimizations.
+This directory contains modular plugins for YieldPilot, allowing extension of the core functionality with new protocols, risk models, data sources, and gas optimizations.
 
 ## Plugin Types
 
-EigenPilot supports the following types of plugins:
+YieldPilot supports the following types of plugins:
 
 - **Protocol Plugins**: Integrate with specific DeFi protocols (Lido, Aave, Uniswap, etc.)
 - **Risk Plugins**: Provide risk scoring and analysis models

@@ -1,10 +1,10 @@
-# EigenPilot 🚀
+# YieldPilot 🚀
 
 A CLI-native DeFi strategist that helps users find optimal staking, looping, borrowing, and restaking strategies across Ethereum protocols.
 
 ## Overview
 
-EigenPilot analyzes your investment intent and constraints to recommend the most efficient strategy route for maximizing real yield while staying within your risk parameters. It focuses on:
+YieldPilot analyzes your investment intent and constraints to recommend the most efficient strategy route for maximizing real yield while staying within your risk parameters. It focuses on:
 
 - **Real net yield** (APY minus gas, borrowing costs, slippage)
 - **Safe risk thresholds** (based on LTV, protocol trust, volatility)
@@ -96,7 +96,7 @@ See [ROADMAP.md](docs/ROADMAP.md) for the project development plan.
 
 ## Phase 1 Service Integrations
 
-EigenPilot's Phase 1 focuses on accurate forecasting and strategy simulation using real data. Below is the status of service integrations for this phase:
+YieldPilot's Phase 1 focuses on accurate forecasting and strategy simulation using real data. Below is the status of service integrations for this phase:
 
 - **Yearn Finance**: Integrated for yield optimization via DefiLlama API. Provides automated vault strategies (5-15% APY). No API key required.
 - **Blocknative**: Planned for real-time gas estimation. API key required and pending setup. Critical for accurate net yield projections.

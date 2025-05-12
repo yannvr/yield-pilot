@@ -1,7 +1,7 @@
 {
   "name": "@eigen-pilot/protocol-lido",
   "version": "0.1.0",
-  "description": "Lido protocol plugin for EigenPilot",
+  "description": "Lido protocol plugin for YieldPilot",
   "type": "module",
   "main": "index.js",
   "scripts": {

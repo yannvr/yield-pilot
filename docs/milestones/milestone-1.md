@@ -2,7 +2,7 @@
 
 ## Overview
 
-Milestone 1 focused on establishing the foundational forecasting and simulation capabilities of EigenPilot. The goal was to create a robust CLI tool capable of evaluating basic DeFi strategies (initially focusing on ETH liquid staking and restaking potential) using real-time on-chain data for yield and gas, while clearly indicating data reliability.
+Milestone 1 focused on establishing the foundational forecasting and simulation capabilities of YieldPilot. The goal was to create a robust CLI tool capable of evaluating basic DeFi strategies (initially focusing on ETH liquid staking and restaking potential) using real-time on-chain data for yield and gas, while clearly indicating data reliability.
 
 ## Key Features & Improvements
 

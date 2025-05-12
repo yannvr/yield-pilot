@@ -1,5 +1,5 @@
 /**
- * Data-driven strategy generator for EigenPilot
+ * Data-driven strategy generator for YieldPilot
  * Uses real protocol data to build DeFi strategy recommendations
  *
  * @param {Object} strategyInput User input defining strategy requirements

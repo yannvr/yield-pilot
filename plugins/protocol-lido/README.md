@@ -1,6 +1,6 @@
-# Lido Protocol Plugin for EigenPilot
+# Lido Protocol Plugin for YieldPilot
 
-This plugin integrates Lido liquid staking protocol into EigenPilot, enabling ETH staking strategies with real-time data and analysis.
+This plugin integrates Lido liquid staking protocol into YieldPilot, enabling ETH staking strategies with real-time data and analysis.
 
 ## Features
 

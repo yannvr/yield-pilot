@@ -1,11 +1,11 @@
 {
-  "name": "eigen-pilot",
+  "name": "yield-pilot",
   "version": "0.1.0",
   "description": "CLI-native DeFi strategist for Ethereum protocols",
   "main": "src/cli/index.js",
   "type": "module",
   "bin": {
-    "eigen-pilot": "src/cli/index.js"
+    "yield-pilot": "src/cli/index.js"
   },
   "scripts": {
     "start": "node src/cli/index.js",

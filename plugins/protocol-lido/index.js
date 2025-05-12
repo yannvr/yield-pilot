@@ -1,5 +1,5 @@
 /**
- * Lido protocol plugin for EigenPilot
+ * Lido protocol plugin for YieldPilot
  * This plugin provides data and analysis for the Lido liquid staking protocol
  */
 

@@ -12,12 +12,12 @@ const execAsync = promisify(exec);
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 /**
- * Plugin creator script for EigenPilot
+ * Plugin creator script for YieldPilot
  * Creates boilerplate for new plugins with correct structure
  */
 async function createPlugin() {
   try {
-    console.log(chalk.blue('📦 EigenPilot Plugin Creator'));
+    console.log(chalk.blue('📦 YieldPilot Plugin Creator'));
     console.log(chalk.gray('This utility will walk you through creating a new plugin\n'));
 
     // Get plugin information from the user
@@ -161,7 +161,7 @@ async function createPlugin() {
 function getReadmeTemplate(type, name, description) {
   const formattedName = name.charAt(0).toUpperCase() + name.slice(1);
 
-  return `# ${formattedName} ${capitalizeFirstLetter(type)} Plugin for EigenPilot
+  return `# ${formattedName} ${capitalizeFirstLetter(type)} Plugin for YieldPilot
 
 ${description}
 
@@ -202,7 +202,7 @@ function getIndexTemplate(type, name, description) {
   const formattedName = name.charAt(0).toUpperCase() + name.slice(1);
 
   let template = `/**
- * ${formattedName} ${type} plugin for EigenPilot
+ * ${formattedName} ${type} plugin for YieldPilot
  * ${description}
  */
 

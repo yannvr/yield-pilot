@@ -1,10 +1,10 @@
-# EigenPilot Milestone 1: Building the Foundation for Smart DeFi Simulation
+# YieldPilot Milestone 1: Building the Foundation for Smart DeFi Simulation
 
-We're excited to announce the completion of **Milestone 1** for EigenPilot, our CLI-first DeFi strategist! This phase laid the critical groundwork for simulating complex DeFi strategies with a strong emphasis on real-world data and transparency.
+We're excited to announce the completion of **Milestone 1** for YieldPilot, our CLI-first DeFi strategist! This phase laid the critical groundwork for simulating complex DeFi strategies with a strong emphasis on real-world data and transparency.
 
 ## The Goal: Accurate Forecasting from Day One
 
-From the start, EigenPilot's mission has been clear: provide users with accurate, data-driven insights into potential DeFi strategies *before* they commit real assets. Milestone 1 focused on building the core engine to achieve this. We aimed to create a tool that could:
+From the start, YieldPilot's mission has been clear: provide users with accurate, data-driven insights into potential DeFi strategies *before* they commit real assets. Milestone 1 focused on building the core engine to achieve this. We aimed to create a tool that could:
 
 1.  Simulate basic strategies, initially targeting ETH liquid staking ([Lido](https://lido.fi/)) and potential restaking routes ([Renzo](https://www.renzoprotocol.com/), [Kelp DAO](https://kelpdao.xyz/), [EigenLayer](https://www.eigenlayer.xyz/)).
 2.  Incorporate real-time on-chain data for crucial factors like yield ([Yearn Finance](https://yearn.finance/), Lido) and gas costs ([Blocknative](https://www.blocknative.com/), [Etherscan](https://etherscan.io/)).
@@ -14,8 +14,8 @@ From the start, EigenPilot's mission has been clear: provide users with accurate
 
 This milestone saw the development of several core components:
 
-*   **The `simulate` Command:** We introduced the foundational `eigen-pilot simulate` command, allowing users to kick off strategy analysis directly from their terminal.
-*   **Real-Time Data Integration:** EigenPilot now pulls data from key sources:
+*   **The `simulate` Command:** We introduced the foundational `yield-pilot simulate` command, allowing users to kick off strategy analysis directly from their terminal.
+*   **Real-Time Data Integration:** YieldPilot now pulls data from key sources:
     *   [DefiLlama](https://defillama.com/) provides baseline protocol data (TVL, APRs) for Lido, [Aave](https://aave.com/), Renzo, Kelp, and Yearn vault APYs.
     *   [Blocknative](https://www.blocknative.com/) offers primary real-time gas fee estimates.
     *   [Etherscan](https://etherscan.io/) serves as a reliable fallback for gas data.
@@ -31,7 +31,7 @@ Under the hood, Milestone 1 involved:
 *   Implementing robust asynchronous fetching from multiple external APIs.
 *   Refactoring the core analysis logic for dynamic, data-driven operation.
 
-## Looking Ahead: What's Next for EigenPilot?
+## Looking Ahead: What's Next for YieldPilot?
 
 Milestone 1 built the chassis; now we start adding more horsepower! While integrations like [1inch](https://app.1inch.io/) (for swap analysis) and advanced AI insights (potentially via [Bittensor](https://bittensor.com/)) were deferred to keep Phase 1 focused, they are high on our priority list.
 
@@ -43,4 +43,4 @@ Future milestones will concentrate on:
 *   Supporting more complex, multi-step strategies like leveraged looping.
 *   Continuously refining the CLI experience and data visualizations.
 
-Stay tuned for more updates as we continue to build EigenPilot into the most insightful and transparent DeFi co-pilot available! 
+Stay tuned for more updates as we continue to build YieldPilot into the most insightful and transparent DeFi co-pilot available! 

@@ -1,4 +1,4 @@
-# 📍EigenPilot Roadmap (v5)
+# 📍YieldPilot Roadmap (v5)
 
 *CLI-native AI DeFi strategist — modular, AVS-ready, and powered by LLMs.*
 
@@ -81,7 +81,7 @@ Expand capabilities with complex strategies and advanced forecasting tools.
 File: `pluginPrompt.txt` (to be created)
 
 ```
-You are a plugin agent in the EigenPilot ecosystem.
+You are a plugin agent in the YieldPilot ecosystem.
 Your task is to interpret plugin-specific output and return commentary about risk, yield stability, protocol flags, and gas concerns.
 ```
 
@@ -102,7 +102,7 @@ Your task is to interpret plugin-specific output and return commentary about ris
 File: `webStrategyPrompt.txt`
 
 ```
-You are EigenPilot's front-end strategist.
+You are YieldPilot's front-end strategist.
 Given a user-selected intent, gas budget, and risk tolerance, simulate and suggest the best routes using modular backend logic.
 Return insights for each strategy with context-sensitive commentary.
 ```
@@ -124,7 +124,7 @@ Return insights for each strategy with context-sensitive commentary.
 File: `performanceAgentPrompt.txt`
 
 ```
-You are EigenPilot's audit agent.
+You are YieldPilot's audit agent.
 Compare logged strategy results to their original simulation output.
 Highlight deviation in yield, cost, LTV, or execution time.
 Recommend changes to templates or route logic.
@@ -147,7 +147,7 @@ Recommend changes to templates or route logic.
 File: `avsAgentPrompt.txt`
 
 ```
-You are EigenPilot's AVS oracle agent.
+You are YieldPilot's AVS oracle agent.
 Your role is to validate or score strategy routes in a stateless, deterministic way.
 Rank routes based on net yield, risk, and sustainability using precomputed metrics.
 ```

@@ -14,7 +14,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
  */
 async function convertFormats() {
   if (process.argv.length < 4) {
-    console.log(chalk.blue('EigenPilot Format Converter'));
+    console.log(chalk.blue('YieldPilot Format Converter'));
     console.log(chalk.gray('Converts between JSON and YAML formats\n'));
     console.log('Usage:');
     console.log('  node format-conversion.js json-to-yaml <input.json> [output.yaml]');
