@@ -4,7 +4,7 @@ import { fileURLToPath } from 'url';
 import { calculateYield } from '../projections/index.js';
 import { getProtocolData } from '../protocols/index.js';
 import { generateInsights } from '../insights/index.js';
-import { mockAIStrategy } from './mockAI.js';
+import { strategyBuilder } from './strategyBuilder.js';
 import YAML from 'yaml';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -45,7 +45,7 @@ export async function analyzeStrategy(strategyInput) {
 
     // In production, this would call the AI service with the prompt and formatted input
     // For development, we use a mock AI response
-    const strategy = await mockAIStrategy(strategyInput);
+    const strategy = await strategyBuilder(strategyInput, protocolData);
 
     // Post-process: Calculate more precise yields
     const yieldEnhancedStrategy = await calculateYield(strategy, strategyInput);

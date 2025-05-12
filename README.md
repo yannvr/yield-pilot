@@ -94,6 +94,19 @@ Judgment: Proceed with monitoring
 
 See [ROADMAP.md](docs/ROADMAP.md) for the project development plan.
 
+## Phase 1 Service Integrations
+
+EigenPilot's Phase 1 focuses on accurate forecasting and strategy simulation using real data. Below is the status of service integrations for this phase:
+
+- **Yearn Finance**: Integrated for yield optimization via DefiLlama API. Provides automated vault strategies (5-15% APY). No API key required.
+- **Blocknative**: Planned for real-time gas estimation. API key required and pending setup. Critical for accurate net yield projections.
+  - API Key Link: [https://www.blocknative.com/](https://www.blocknative.com/)
+- **1inch**: Planned for swap optimization to minimize slippage in asset conversions. API key verification in progress; integration to be completed once verified.
+  - API Key Link: [https://1inch.io/api/](https://1inch.io/api/)
+  - Status: Temporarily skipped in initial Phase 1 implementation. Will be integrated in a subsequent update to enhance strategy returns.
+
+**Note**: Advanced forecasting tools like Bittensor are deferred to a later phase to focus on core functionality with the above services.
+
 ## License
 
 MIT 

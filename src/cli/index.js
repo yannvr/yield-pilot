@@ -177,6 +177,21 @@ function displayStrategy(strategy) {
     });
   }
 
+  // Display data sources reliability
+  if (strategy.dataSources) {
+    console.log('\n' + chalk.bold('Data Source Reliability:'));
+    Object.entries(strategy.dataSources).forEach(([key, value]) => {
+      const color = value === 'Real Data' ? chalk.green : chalk.yellow;
+      console.log(`  ${chalk.bold(key + ':')} ${color(value)}`);
+    });
+  }
+
+  // Display specific warning about fallback values if present
+  if (strategy.warning) {
+    console.log('\n' + chalk.bold.yellow('⚠️  Data Warning:'));
+    console.log(chalk.yellow(`  ${strategy.warning}`));
+  }
+
   // Judgment with color coding
   const judgmentColor =
     strategy.judgment.includes('Optimal') ? 'green' :
