@@ -1,0 +1,47 @@
+{
+  "name": "yield-pilot",
+  "version": "0.1.1",
+  "description": "CLI-native DeFi strategist for Ethereum protocols",
+  "main": "src/cli/index.js",
+  "type": "module",
+  "bin": {
+    "eigen-pilot": "src/cli/index.js"
+  },
+  "scripts": {
+    "start": "node src/cli/index.js",
+    "dev": "node --watch src/cli/index.js",
+    "test": "node --test",
+    "create-plugin": "node scripts/create-plugin.js",
+    "format-convert": "node scripts/format-conversion.js"
+  },
+  "keywords": [
+    "defi",
+    "eth",
+    "ethereum",
+    "yield",
+    "staking",
+    "restaking",
+    "eigen",
+    "eigenlayer"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "axios": "1.6.8",
+    "chalk": "5.4.1",
+    "commander": "13.1.0",
+    "conf": "13.1.0",
+    "defillama-api": "1.0.2",
+    "dotenv": "16.4.5",
+    "ethereum-cryptography": "3.2.0",
+    "ethers": "6.14.0",
+    "inquirer": "9.2.12",
+    "ora": "8.2.0",
+    "redis": "4.6.13",
+    "yaml": "2.3.4"
+  },
+  "devDependencies": {
+    "eslint": "9.26.0"
+  },
+  "packageManager": "pnpm@8.10.0"
+}
