@@ -1,0 +1,20 @@
+{
+  "name": "@yield-pilot/protocol-bittensor",
+  "version": "0.1.0",
+  "description": "BitTensor protocol plugin for YieldPilot",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "test": "node --test"
+  },
+  "keywords": [
+    "yield-pilot",
+    "plugin",
+    "protocol",
+    "bittensor",
+    "ai",
+    "predictions"
+  ],
+  "author": "",
+  "license": "MIT"
+}
