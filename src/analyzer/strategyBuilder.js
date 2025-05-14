@@ -26,10 +26,10 @@ export async function strategyBuilder(strategyInput, protocolData) {
 
   // Access real data from protocolData
   const gasData = protocolData.gas || { current: { average: 0 }, estimation: { stake: 0, swap: 0, supply: 0, borrow: 0 } };
-  const lidoData = protocolData.lido || { stETHAPR: 0, fee: 0.1 };
+  const lidoData = protocolData.lido || { stETHAPR: 0, fee: 0 };
   const aaveData = protocolData.aave || { supplyRates: {}, borrowRates: {} };
-  const renzoData = protocolData.renzo || { apyBoost: 0, fee: 0.15 };
-  const kelpData = protocolData.kelp || { apyBoost: 0, fee: 0.10 };
+  const renzoData = protocolData.renzo || { apyBoost: 0, fee: 0 };
+  const kelpData = protocolData.kelp || { apyBoost: 0, fee: 0 };
   const yearnData = protocolData.yearn || { vaultAPYs: {} };
 
   // Helper to calculate gas cost based on number of transactions
@@ -39,21 +39,21 @@ export async function strategyBuilder(strategyInput, protocolData) {
   };
 
   // Build strategy based on asset and risk tolerance using real data
-  console.log('Protocol Data for Route Building:', JSON.stringify(protocolData, null, 2));
+  // console.log('Protocol Data for Route Building:', JSON.stringify(protocolData, null, 2));
   if (asset === 'ETH') {
     if (riskTolerance === 'low') {
       proposedRoute = buildLowRiskETHRoute(protocolData);
-      grossAPR = lidoData.stETHAPR || 3.8;
-      netYield = grossAPR - (lidoData.fee * grossAPR) || 3.7;
+      grossAPR = lidoData.stETHAPR || 0;
+      netYield = grossAPR - (lidoData.fee * grossAPR) || 0;
       gasEstimateEth = calculateGasEstimate(1);
       riskScore = 2.0;
       insight = `Simple staking via Lido offers a current APR of ${grossAPR.toFixed(1)}%. Minimal gas cost for a single transaction and no liquidation risk make this a safe choice.`;
       judgment = 'Optimal for low risk';
     } else if (riskTolerance === 'medium') {
       proposedRoute = buildMediumRiskETHRoute(protocolData);
-      const baseAPR = lidoData.stETHAPR || 3.8;
-      const boostAPR = renzoData.apyBoost || 2.0;
-      const borrowRate = aaveData.borrowRates['USDC'] || 2.5;
+      const baseAPR = lidoData.stETHAPR || 0;
+      const boostAPR = renzoData.apyBoost || 0;
+      const borrowRate = aaveData.borrowRates['USDC'] || 0;
       grossAPR = baseAPR + boostAPR + (baseAPR * 0.5); // Assume 50% leverage on base APR
       netYield = grossAPR - (lidoData.fee * baseAPR) - (renzoData.fee * boostAPR) - borrowRate;
       gasEstimateEth = calculateGasEstimate(proposedRoute.length - 1);
@@ -62,11 +62,11 @@ export async function strategyBuilder(strategyInput, protocolData) {
       judgment = 'Proceed with monitoring';
     } else if (riskTolerance === 'high') {
       proposedRoute = buildHighRiskETHRoute(protocolData);
-      const baseAPR = lidoData.stETHAPR || 3.8;
-      const renzoBoost = renzoData.apyBoost || 2.0;
-      const kelpBoost = kelpData.apyBoost || 1.5;
-      const borrowRateUSDC = aaveData.borrowRates['USDC'] || 2.5;
-      const borrowRateETH = aaveData.borrowRates['ETH'] || 3.0;
+      const baseAPR = lidoData.stETHAPR || 0;
+      const renzoBoost = renzoData.apyBoost || 0;
+      const kelpBoost = kelpData.apyBoost || 0;
+      const borrowRateUSDC = aaveData.borrowRates['USDC'] || 0;
+      const borrowRateETH = aaveData.borrowRates['ETH'] || 0;
       grossAPR = baseAPR + renzoBoost + kelpBoost + (baseAPR * 0.8); // Assume higher leverage
       netYield = grossAPR - (lidoData.fee * baseAPR) - (renzoData.fee * renzoBoost) - (kelpData.fee * kelpBoost) - borrowRateUSDC - borrowRateETH;
       gasEstimateEth = calculateGasEstimate(proposedRoute.length - 1);
@@ -77,7 +77,7 @@ export async function strategyBuilder(strategyInput, protocolData) {
   } else if (asset === 'USDC') {
     if (riskTolerance === 'low') {
       proposedRoute = buildLowRiskUSDCRoute(protocolData);
-      grossAPR = aaveData.supplyRates['USDC'] || 4.2;
+      grossAPR = aaveData.supplyRates['USDC'] || 0;
       netYield = grossAPR * 0.95; // Assume small fee or cost
       gasEstimateEth = calculateGasEstimate(1);
       riskScore = 2.1;
@@ -85,9 +85,9 @@ export async function strategyBuilder(strategyInput, protocolData) {
       judgment = 'Optimal for low risk';
     } else if (riskTolerance === 'medium') {
       proposedRoute = buildMediumRiskUSDCRoute(protocolData);
-      const supplyRate = aaveData.supplyRates['stETH'] || 1.5;
-      const borrowRate = aaveData.borrowRates['USDC'] || 2.5;
-      const baseAPR = lidoData.stETHAPR || 3.8;
+      const supplyRate = aaveData.supplyRates['stETH'] || 0;
+      const borrowRate = aaveData.borrowRates['USDC'] || 0;
+      const baseAPR = lidoData.stETHAPR || 0;
       grossAPR = baseAPR + supplyRate;
       netYield = grossAPR - borrowRate - (lidoData.fee * baseAPR);
       gasEstimateEth = calculateGasEstimate(proposedRoute.length - 1);
@@ -96,9 +96,9 @@ export async function strategyBuilder(strategyInput, protocolData) {
       judgment = 'Proceed with caution';
     } else if (riskTolerance === 'high') {
       proposedRoute = buildHighRiskUSDCRoute(protocolData);
-      const baseAPR = lidoData.stETHAPR || 3.8;
-      const boostAPR = renzoData.apyBoost || 2.0;
-      const borrowRate = aaveData.borrowRates['USDC'] || 2.5;
+      const baseAPR = lidoData.stETHAPR || 0;
+      const boostAPR = renzoData.apyBoost || 0;
+      const borrowRate = aaveData.borrowRates['USDC'] || 0;
       grossAPR = baseAPR + boostAPR + (baseAPR * 0.4);
       netYield = grossAPR - (lidoData.fee * baseAPR) - (renzoData.fee * boostAPR) - borrowRate;
       gasEstimateEth = calculateGasEstimate(proposedRoute.length - 1);
@@ -109,8 +109,8 @@ export async function strategyBuilder(strategyInput, protocolData) {
   } else {
     // Default fallback for unrecognized assets
     proposedRoute = buildDefaultRoute(protocolData);
-    grossAPR = lidoData.stETHAPR || 3.8;
-    netYield = grossAPR - (lidoData.fee * grossAPR) || 3.7;
+    grossAPR = lidoData.stETHAPR || 0;
+    netYield = grossAPR - (lidoData.fee * grossAPR) || 0;
     gasEstimateEth = calculateGasEstimate(1);
     riskScore = 2.0;
     insight = `Default to simple ETH staking via Lido with current APR of ${grossAPR.toFixed(1)}%. Minimal gas cost and no liquidation risk.`;
@@ -135,14 +135,14 @@ export async function strategyBuilder(strategyInput, protocolData) {
     insight,
     judgment,
     dataSources: {
-      lidoAPR: lidoData.stETHAPR !== null ? 'Real Data' : 'Fallback Value',
-      aaveSupplyRates: Object.keys(aaveData.supplyRates).length > 0 && aaveData.supplyRates['stETH'] !== undefined ? 'Real Data' : 'Fallback Value',
-      aaveBorrowRates: Object.keys(aaveData.borrowRates).length > 0 && aaveData.borrowRates['USDC'] !== undefined ? 'Real Data' : 'Fallback Value',
-      renzoBoost: renzoData.apyBoost !== 0 ? 'Fallback Value' : 'Real Data',
-      kelpBoost: kelpData.apyBoost !== 0 ? 'Fallback Value' : 'Real Data',
-      gasEstimate: gasData.current.average !== null ? 'Real Data' : 'Fallback Value'
+      lidoAPR: lidoData.stETHAPR !== 0 ? 'Real Data' : 'No Data Available',
+      aaveSupplyRates: Object.keys(aaveData.supplyRates).length > 0 && aaveData.supplyRates['stETH'] !== undefined ? 'Real Data' : 'No Data Available',
+      aaveBorrowRates: Object.keys(aaveData.borrowRates).length > 0 && aaveData.borrowRates['USDC'] !== undefined ? 'Real Data' : 'No Data Available',
+      renzoBoost: renzoData.apyBoost !== 0 ? 'Real Data' : 'No Data Available',
+      kelpBoost: kelpData.apyBoost !== 0 ? 'Real Data' : 'No Data Available',
+      gasEstimate: gasData.current.average !== 0 ? 'Real Data' : 'No Data Available'
     },
-    warning: 'Warning: Some values are fallback estimates due to unverified or unavailable API data. Check data sources for details.'
+    warning: 'Warning: Some values may be zero due to unavailable API data. Check data sources for details.'
   };
 }
 

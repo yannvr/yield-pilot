@@ -3,6 +3,18 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 import defillama from 'defillama-api';
+// Import protocol plugins
+import * as protocolLido from '../../plugins/protocol-lido/index.js';
+import * as protocolAave from '../../plugins/protocol-aave/index.js';
+import * as protocolRenzo from '../../plugins/protocol-renzo/index.js';
+
+// Try to import other protocol plugins if they exist
+let protocolBittensor = null;
+try {
+  protocolBittensor = await import('../../plugins/protocol-bittensor/index.js');
+} catch (error) {
+  console.log('Bittensor plugin not available:', error.message);
+}
 
 // Helper function to safely extract data
 const safeGet = (obj, path, defaultValue = null) => {
@@ -16,19 +28,90 @@ const safeGet = (obj, path, defaultValue = null) => {
 
 /**
  * Get current data for supported DeFi protocols
- * Fetches real-time data from DefiLlama API
+ * Fetches real-time data from protocol plugins or fallback to DefiLlama API
  *
  * @returns {Promise<Object>} Current protocol data
  */
 export async function getProtocolData() {
-  console.log("Fetching protocol data from DefiLlama...");
+  console.log("Fetching protocol data...");
+  const missingData = {};
+
   try {
+    // Initialize protocol data objects
+    let lidoData = null;
+    let aaveData = null;
+    let renzoDataFromPlugin = null;
+    let kelpData = null;
+    let eigenLayerData = null;
+    let yearnData = null;
+    let gasData = null;
+
+    // Fetch data from protocol plugins in parallel
+    const pluginPromises = [];
+
+    // Lido data from protocol-lido plugin
+    pluginPromises.push(
+      protocolLido.getProtocolData()
+        .then(data => {
+          console.log("Fetched Lido data from protocol plugin");
+          lidoData = {
+            stETHAPR: data.apr,
+            tvl: data.totalStaked,
+            fee: 0.1
+          };
+        })
+        .catch(error => {
+          console.warn("Failed to fetch Lido data from plugin:", error.message);
+          missingData.lidoPlugin = `Failed to fetch from plugin: ${error.message}`;
+        })
+    );
+
+    // Aave data from protocol-aave plugin
+    pluginPromises.push(
+      protocolAave.getProtocolData()
+        .then(data => {
+          console.log("Fetched Aave data from protocol plugin");
+          aaveData = {
+            supplyRates: data.supplyRates,
+            borrowRates: data.borrowRates,
+            ltv: data.ltvRatios,
+            liquidationThresholds: data.liquidationThresholds,
+            totalSupply: data.totalSupply,
+            totalBorrow: data.totalBorrow,
+            totalLiquidityUSD: data.totalLiquidityUSD,
+            totalBorrowsUSD: data.totalBorrowsUSD,
+            source: data.source
+          };
+        })
+        .catch(error => {
+          console.warn("Failed to fetch Aave data from plugin:", error.message);
+          missingData.aavePlugin = `Failed to fetch from plugin: ${error.message}`;
+        })
+    );
+
+    // Renzo data from protocol-renzo plugin
+    pluginPromises.push(
+      protocolRenzo.getProtocolData()
+        .then(data => {
+          console.log("Fetched Renzo data from protocol plugin");
+          renzoDataFromPlugin = {
+            apyBoost: data.apyBoost,
+            tvl: data.tvl,
+            source: data.source
+          };
+        })
+        .catch(error => {
+          console.warn("Failed to fetch Renzo data from plugin:", error.message);
+          missingData.renzoPlugin = `Failed to fetch from plugin: ${error.message}`;
+        })
+    );
+
+    // Fetch data from DefiLlama for protocols without plugins
     const [
       protocolTvls,
       ethPriceData,
       yieldPoolsData,
-      // Add more calls here for new integrations
-      yearnData
+      yearnDefiLlamaData
     ] = await Promise.allSettled([
       // Fetch TVL for relevant protocols
       Promise.all([
@@ -52,7 +135,7 @@ export async function getProtocolData() {
       // Blocknative API for gas estimation
       const blocknativeResponse = await fetch('https://api.blocknative.com/gasprices/blockprices', {
         headers: {
-          'Authorization': process.env.BLOCKNATIVE_API_KEY || 'YOUR_BLOCKNATIVE_API_KEY_HERE'
+          'Authorization': process.env.BLOCKNATIVE_API_KEY || ''
         }
       });
       blocknativeGasData = { status: 'fulfilled', value: await blocknativeResponse.json() };
@@ -64,7 +147,7 @@ export async function getProtocolData() {
     if (blocknativeGasData.status === 'rejected') {
       try {
         // Fallback to Etherscan Gas Tracker API
-        const etherscanResponse = await fetch(`https://api.etherscan.io/api?module=gastracker&action=gasoracle&apikey=${process.env.ETHERSCAN_API_KEY || 'YOUR_ETHERSCAN_API_KEY_HERE'}`);
+        const etherscanResponse = await fetch(`https://api.etherscan.io/api?module=gastracker&action=gasoracle&apikey=${process.env.ETHERSCAN_API_KEY || ''}`);
         etherscanGasData = { status: 'fulfilled', value: await etherscanResponse.json() };
       } catch (error) {
         console.warn("Failed to fetch Etherscan gas data:", error.message);
@@ -87,12 +170,12 @@ export async function getProtocolData() {
       : null;
 
     // --- Process Yearn Finance Data ---
-    const yearnTvl = yearnData.status === 'fulfilled'
-      ? safeGet(yearnData.value, 'tvl', null)
+    const yearnTvl = yearnDefiLlamaData.status === 'fulfilled'
+      ? safeGet(yearnDefiLlamaData.value, 'tvl', null)
       : null;
 
-    if (yearnData.status === 'rejected') {
-      console.warn("Failed to fetch Yearn Finance data:", yearnData.reason);
+    if (yearnDefiLlamaData.status === 'rejected') {
+      console.warn("Failed to fetch Yearn Finance data:", yearnDefiLlamaData.reason);
     }
 
     // --- Process Yearn Vault APYs from Yield Pools ---
@@ -123,72 +206,87 @@ export async function getProtocolData() {
     }
 
     // --- Process Yield Pools (Complex Mapping) ---
+    // Only use this if we don't have plugin data for Lido
     let lidoStEthApr = null;
-    const aaveSupplyRates = {
-      'stETH': 1.5,
-      'ETH': 1.2,
-      'USDC': 4.2
-    };
-    const aaveBorrowRates = {
-      'USDC': 2.5,
-      'ETH': 3.0
-    };
-    // Add placeholders for other yields like EigenLayer base APR, Renzo/Kelp boosts
-    let eigenLayerBaseApr = null; // Hard to determine definitively from /pools
-    let renzoApyBoost = 2.0; // Placeholder until specific pool logic is added
-    let kelpApyBoost = 1.5; // Placeholder until specific pool logic is added
+    const aaveSupplyRates = {};
+    const aaveBorrowRates = {};
+    let eigenLayerBaseApr = null;
+    let renzoApyBoostDefillama = null;
+    let kelpApyBoost = null;
 
     if (yieldPoolsData.status === 'fulfilled' && yieldPoolsData.value?.data) {
       const pools = yieldPoolsData.value.data;
-      // Find Lido stETH pool on Ethereum (example logic, might need refinement)
-      const lidoPool = pools.find(p =>
-        p.project === 'lido' &&
-        p.chain === 'Ethereum' &&
-        p.symbol === 'stETH' // Assuming symbol is reliable
-      );
-      lidoStEthApr = lidoPool ? safeGet(lidoPool, 'apyBase', null) : null; // Or apy, apyReward etc.
 
-      // Find Aave V3 Ethereum pools (example logic)
-      const aavePools = pools.filter(p =>
-        p.project === 'aave-v3' &&
-        p.chain === 'Ethereum'
-      );
+      // Only fetch Lido data from DefiLlama if plugin failed
+      if (!lidoData) {
+        // Find Lido stETH pool on Ethereum
+        const lidoPool = pools.find(p =>
+          p.project === 'lido' &&
+          p.chain === 'Ethereum' &&
+          p.symbol === 'stETH'
+        );
+        lidoStEthApr = lidoPool ? safeGet(lidoPool, 'apyBase', null) : null;
+        if (!lidoStEthApr) missingData.lidoStEthApr = 'Lido stETH APR not found in yield pools';
+      }
 
-      const aaveSymbolMap = {
-        'stETH': 'stETH', // Check DefiLlama symbols
-        'wstETH': 'wstETH',
-        'ETH': 'WETH', // Often WETH on DefiLlama
-        'USDC': 'USDC',
-        'USDT': 'USDT',
-        'DAI': 'DAI'
-      };
-
-      for (const pool of aavePools) {
-        const symbol = pool.symbol;
-        const internalSymbol = Object.keys(aaveSymbolMap).find(key => aaveSymbolMap[key] === symbol);
-        if (internalSymbol) {
-          // Use apyBase for supply, apyBaseBorrow for borrow if available
-          aaveSupplyRates[internalSymbol] = safeGet(pool, 'apyBase', null) || 1.5; // Placeholder if null
-          aaveBorrowRates[internalSymbol] = (safeGet(pool, 'apyBaseBorrow', null) ?? safeGet(pool, 'apyBorrow', null)) || 2.5; // Placeholder if null
+      // Only fetch Aave data from DefiLlama if plugin failed
+      if (!aaveData) {
+        // Find Aave V3 Ethereum pools
+        const aavePools = pools.filter(p =>
+          p.project === 'aave-v3' &&
+          p.chain === 'Ethereum'
+        );
+        const aaveSymbolMap = {
+          'stETH': 'stETH',
+          'wstETH': 'wstETH',
+          'ETH': 'WETH',
+          'USDC': 'USDC',
+          'USDT': 'USDT',
+          'DAI': 'DAI'
+        };
+        for (const pool of aavePools) {
+          const symbol = pool.symbol;
+          const internalSymbol = Object.keys(aaveSymbolMap).find(key => aaveSymbolMap[key] === symbol);
+          if (internalSymbol) {
+            const supply = safeGet(pool, 'apyBase', null);
+            const borrow = safeGet(pool, 'apyBaseBorrow', null) ?? safeGet(pool, 'apyBorrow', null);
+            if (supply === null) missingData[`aaveSupply_${internalSymbol}`] = `Aave supply rate for ${internalSymbol} not found`;
+            if (borrow === null) missingData[`aaveBorrow_${internalSymbol}`] = `Aave borrow rate for ${internalSymbol} not found`;
+            aaveSupplyRates[internalSymbol] = supply;
+            aaveBorrowRates[internalSymbol] = borrow;
+          }
         }
       }
-      // TODO: Find pools/logic for EigenLayer base APR, Renzo/Kelp boosts
+
+      // Find EigenLayer, Renzo, and Kelp data
+      const eigenLayerPool = pools.find(p =>
+        p.project === 'eigenlayer' &&
+        p.chain === 'Ethereum'
+      );
+      eigenLayerBaseApr = eigenLayerPool ? safeGet(eigenLayerPool, 'apyBase', null) : null;
+      if (!eigenLayerBaseApr) missingData.eigenLayerBaseApr = 'EigenLayer base APR not found';
+
+      // Only fetch Renzo from DefiLlama if plugin failed or didn't provide data
+      if (!renzoDataFromPlugin || renzoDataFromPlugin.apyBoost === null) {
+        const renzoPool = pools.find(p =>
+          p.project === 'renzoprotocol' &&
+          p.chain === 'Ethereum'
+        );
+        renzoApyBoostDefillama = renzoPool ? safeGet(renzoPool, 'apyBase', null) : null;
+        if (!renzoApyBoostDefillama && !renzoDataFromPlugin?.source) missingData.renzoApyBoost = 'Renzo APY boost not found in DefiLlama';
+      }
+
+      const kelpPool = pools.find(p =>
+        p.project === 'kelp-dao' &&
+        p.chain === 'Ethereum'
+      );
+      kelpApyBoost = kelpPool ? safeGet(kelpPool, 'apyBase', null) : null;
+      if (!kelpApyBoost) missingData.kelpApyBoost = 'Kelp APY boost not found';
 
     } else if (yieldPoolsData.status === 'rejected') {
       console.warn("Failed to fetch yield pools data:", yieldPoolsData.reason);
-      // Set default placeholder values for Aave if API fetch fails
-      aaveSupplyRates['stETH'] = 1.5;
-      aaveSupplyRates['ETH'] = 1.2;
-      aaveSupplyRates['USDC'] = 4.2;
-      aaveBorrowRates['USDC'] = 2.5;
-      aaveBorrowRates['ETH'] = 3.0;
+      missingData.yieldPools = 'Yield pools data fetch failed';
     }
-
-    // --- TODO: Process Uniswap Data ---
-    // Need to add call to Promise.allSettled above, e.g., defillama.volumes.dexsProtocol('uniswap-v3')
-    // Then process the result here to extract pool fees, liquidity, volume for relevant pairs.
-    // TODO: Integrate 1inch API for better swap optimization
-    const uniswapPools = {};
 
     // --- Process Gas Data from Blocknative or Etherscan ---
     let gasCurrent = { slow: null, average: null, fast: null };
@@ -226,53 +324,75 @@ export async function getProtocolData() {
       console.log("Fetched gas data from Etherscan (fallback).");
     } else {
       console.warn("No gas data available from Blocknative or Etherscan.");
+      missingData.gasData = 'Gas data not available from any source';
     }
 
+    // Wait for all plugin promises to complete
+    await Promise.allSettled(pluginPromises);
+
     console.log("Finished fetching protocol data.");
+
     // --- Construct Final Data Object ---
     return {
-      lido: {
+      lido: lidoData || {
         stETHAPR: lidoStEthApr,
         tvl: lidoTvl,
-        fee: 0.1 // Assumed constant
+        fee: 0.1
       },
-      aave: { // Aave V3 Ethereum assumed
+      aave: aaveData || {
         supplyRates: aaveSupplyRates,
         borrowRates: aaveBorrowRates,
-        ltv: {} // TODO: LTVs usually require config/manual mapping, not easily available via API
+        ltv: {},
+        liquidationThresholds: {},
+        totalSupply: {},
+        totalBorrow: {},
+        source: Object.keys(aaveSupplyRates).length > 0 ? 'DefiLlama (fallback)' : 'No Data Available'
       },
       eigenLayer: {
-        baseAPR: eigenLayerBaseApr, // Placeholder
+        baseAPR: eigenLayerBaseApr,
         tvl: eigenLayerTvl
       },
-      renzo: {
-        apyBoost: renzoApyBoost, // Placeholder
+      renzo: renzoDataFromPlugin || {
+        apyBoost: renzoApyBoostDefillama,
         tvl: renzoTvl,
-        fee: 0.15 // Assumed constant
+        fee: 0.15,
+        source: renzoApyBoostDefillama ? 'DefiLlama (fallback)' : 'No Data Available'
       },
       kelp: {
-        apyBoost: kelpApyBoost, // Placeholder
+        apyBoost: kelpApyBoost,
         tvl: kelpTvl,
-        fee: 0.10 // Assumed constant
+        fee: 0.10
       },
       yearn: {
         tvl: yearnTvl,
-        vaultAPYs: yearnVaultAPYs // Populated with specific vault data from yieldPoolsData
+        vaultAPYs: yearnVaultAPYs
       },
-      uniswap: { // Uniswap V3 assumed
-        pools: uniswapPools // TODO: Populate from API call, consider 1inch integration when API key is verified
+      uniswap: {
+        pools: {}
       },
-      gas: { // Updated with data from Blocknative or Etherscan
+      gas: {
         current: gasCurrent,
         estimation: gasEstimation,
         ethPrice: ethPrice
+      },
+      missingData,
+      dataSources: {
+        lido: lidoData?.source || (lidoStEthApr ? 'DefiLlama' : 'No Data Available'),
+        aave: aaveData?.source || (Object.keys(aaveSupplyRates).length > 0 ? 'DefiLlama (fallback)' : 'No Data Available'),
+        renzo: renzoDataFromPlugin?.source || (renzoApyBoostDefillama ? 'DefiLlama (fallback)' : 'No Data Available'),
+        eigenLayer: eigenLayerBaseApr ? 'DefiLlama' : 'No Data Available',
+        kelp: kelpApyBoost ? 'DefiLlama' : 'No Data Available',
+        gas: gasCurrent.average ? (blocknativeGasData.status === 'fulfilled' && blocknativeGasData.value?.blockPrices?.length > 0 ? 'Blocknative' : (etherscanGasData.status === 'fulfilled' && etherscanGasData.value?.result ? 'Etherscan' : 'No Data Available')) : 'No Data Available'
       }
     };
   } catch (error) {
     console.error("Critical error in getProtocolData:", error);
-    // Fallback or re-throw depending on desired error handling
-    // Returning an empty structure might be safer than throwing
-    return { /* return empty or default structure */ };
-    // throw new Error(`Failed to get protocol data: ${error.message}`);
+    // Return an empty structure with error information
+    return {
+      error: error.message,
+      missingData: {
+        critical: 'Failed to fetch protocol data due to critical error'
+      }
+    };
   }
 }

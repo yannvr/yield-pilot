@@ -195,4 +195,62 @@ Judgment: Proceed with caution
 
 ## Project Structure
 
-- `src/cli`
+- `src/cli` - CLI implementation
+- `src/analyzer` - Strategy analysis and building
+- `src/protocols` - Protocol data integration and aggregation
+- `src/projections` - Yield calculation and projections
+- `src/insights` - Market insights and recommendations
+- `plugins/` - Protocol-specific plugins for real-time data
+
+## Protocol Plugins
+
+YieldPilot uses protocol-specific plugins to fetch real-time data directly from the source, ensuring accurate yield calculations and risk assessments. The following plugins are currently implemented:
+
+- **protocol-lido** - Fetches data from The Graph for Lido protocol (stETH)
+- **protocol-aave** - Fetches data from The Graph for Aave V3 protocol (lending/borrowing)
+
+Additional protocol plugins are planned for:
+- Renzo (ezETH)
+- Kelp (rsETH)
+- EigenLayer
+- Yearn Finance
+- Uniswap
+- Gas pricing
+
+### Creating a New Protocol Plugin
+
+```bash
+node scripts/create-plugin.js
+```
+
+This will prompt you to create a new protocol plugin with the necessary structure.
+
+## Environment Setup
+
+Create a `.env` file with the following API keys:
+
+```
+THEGRAPH_API_KEY=your_graph_api_key
+BLOCKNATIVE_API_KEY=your_blocknative_api_key
+ETHERSCAN_API_KEY=your_etherscan_api_key
+```
+
+## Contributing
+
+Contributions are welcome! Please check out our [contribution guidelines](CONTRIBUTING.md) for details.
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add some amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## Acknowledgments
+
+- [DefiLlama](https://defillama.com/) for fallback protocol data
+- [The Graph](https://thegraph.com/) for protocol-specific data
+- All the amazing DeFi protocols that make this possible

@@ -40,20 +40,20 @@ File: `strategyAgentPrompt.txt`
 
 Focus on accurate forecasting and modular strategy simulation using real data across Ethereum protocols (Lido, Aave, Uniswap, EigenLayer wrappers like Renzo, Kelp).
 
-- **Yearn Finance**: Integrated for yield optimization via DefiLlama API. Provides automated vault strategies (5-15% APY) as a baseline for user recommendations. No API key required.
+- **Yearn Finance**: Integrated for yield optimization via DefiLlama API. Provides automated vault strategies (5-15% APY) as a baseline for user recommendations. No API key required. [Official Website](https://yearn.finance/)
 - **Blocknative**: Planned for real-time gas estimation to factor into net yield projections. API key required and pending setup.
   - API Key Link: [https://www.blocknative.com/](https://www.blocknative.com/)
 - **1inch**: Planned for swap optimization to minimize slippage in asset conversions. API key verification in progress; integration deferred until verified.
   - API Key Link: [https://1inch.io/api/](https://1inch.io/api/)
   - Status: Temporarily skipped in initial Phase 1 implementation. To be integrated in a subsequent update to enhance strategy returns.
-- **Basic Insights**: Develop simple heuristic-based insights in place of advanced AI tools, using real data from DefiLlama and integrated services for market context and risk assessments.
+- **Basic Insights**: Develop simple heuristic-based insights in place of advanced AI tools, using real data from DefiLlama and integrated services for market context and risk assessments. [DefiLlama Website](https://defillama.com/)
 
 ## Phase 2: Advanced Strategies and Enhanced Insights
 
 Expand capabilities with complex strategies and advanced forecasting tools.
 
-- **Aave + DeFi Saver**: Enable double looping strategies (10-20% APY) with automation for higher yields, incorporating robust risk analysis for leverage and liquidation thresholds.
-- **Bittensor**: Integrate for AI-driven insights and forecasting (e.g., gas prices, APYs, risks) via a Python microservice with REST API. Deferred to Phase 2 due to setup complexity.
+- **Aave + DeFi Saver**: Enable double looping strategies (10-20% APY) with automation for higher yields, incorporating robust risk analysis for leverage and liquidation thresholds. [Aave Website](https://aave.com/) | [DeFi Saver Website](https://defisaver.com/)
+- **Bittensor**: Integrate for AI-driven insights and forecasting (e.g., gas prices, APYs, risks) via a Python microservice with REST API. Deferred to Phase 2 due to setup complexity. Bittensor's Finney tensor will be utilized for its specialized capabilities in financial data analysis and prediction, enhancing the accuracy of DeFi strategy simulations. [Bittensor Website](https://bittensor.com/)
   - Access Setup: Wallet and staking via [https://docs.bittensor.com/getting-started/wallet](https://docs.bittensor.com/getting-started/wallet)
 - **Enhanced Risk Analysis**: Strengthen risk scoring for complex strategies, factoring in LTV, volatility, and market conditions.
 
