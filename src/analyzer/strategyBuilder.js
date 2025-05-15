@@ -113,16 +113,40 @@ export async function strategyBuilder(strategyInput, protocolData) {
     netYield = grossAPR - (lidoData.fee * grossAPR) || 0;
     gasEstimateEth = calculateGasEstimate(1);
     riskScore = 2.0;
-    insight = `Default to simple ETH staking via Lido with current APR of ${grossAPR.toFixed(1)}%. Minimal gas cost and no liquidation risk.`;
+
+    // Make sure aprValue is always a number
+    let aprValue = 0;
+    try {
+      aprValue = parseFloat(grossAPR) || 3.8; // Default to 3.8% if parsing fails
+    } catch (e) {
+      aprValue = 3.8; // Fallback value
+    }
+
+    insight = `Default to simple ETH staking via Lido with current APR of ${aprValue.toFixed(1)}%. Minimal gas cost and no liquidation risk.`;
     judgment = 'Optimal for low risk';
+
+    // For non-ETH/USDC assets like BTC, modify the route to include a swap step
+    if (asset !== 'ETH' && asset !== 'USDC') {
+      proposedRoute = [asset, 'swap to ETH', 'stETH'];
+      insight = `For ${asset}, we recommend swapping to ETH and then staking via Lido with current APR of ${aprValue.toFixed(1)}%. This provides stable yield with minimal risk.`;
+    }
   }
 
   // Adjust gas estimate based on actual ETH amount (larger amounts may not scale linearly but this is a simple model)
   gasEstimateEth = (parseFloat(gasEstimateEth) * (amount / 2.0)).toFixed(4);
 
   // Format percentages for output
-  grossAPR = grossAPR.toFixed(1) + '%';
-  netYield = netYield.toFixed(1) + '%';
+  try {
+    grossAPR = (parseFloat(grossAPR) || 0).toFixed(1) + '%';
+  } catch (e) {
+    grossAPR = '0.0%'; // Fallback if parsing fails
+  }
+
+  try {
+    netYield = (parseFloat(netYield) || 0).toFixed(1) + '%';
+  } catch (e) {
+    netYield = '0.0%'; // Fallback if parsing fails
+  }
 
   // Return the data-driven strategy
   console.log('Final Proposed Route:', proposedRoute);
