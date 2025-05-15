@@ -49,15 +49,9 @@ export async function getProtocolData() {
         name
         symbol
       }
-      rewardTokens {
-        id
-        name
-        symbol
-      }
       totalValueLockedUSD
       cumulativeSupplySideRevenueUSD
       cumulativeTotalRevenueUSD
-      rewardTokenEmissionsUSD
     }
     financialsDailySnapshots(first: 7, orderBy: timestamp, orderDirection: desc) {
       id
@@ -70,104 +64,103 @@ export async function getProtocolData() {
     }
   }`;
 
+  let tvl = null;
+  let apr = null; // Or APY boost
+  let source = 'no-data'; // Default source
+
+  // Try The Graph first
   try {
     console.log("Attempting to fetch Renzo data from The Graph:", endpoint);
     if (!apiKey) {
       console.warn("Missing THEGRAPH_API_KEY in environment variables. The Graph query might fail or be rate-limited.");
     }
-
     const headers = { 'Content-Type': 'application/json' };
-    // It's common for gateways to require the API key in an Authorization header or as part of the URL path.
-    // The structure above assumes the key is part of the path if present.
-    // If using a specific service query URL, Authorization header might be needed:
-    // if (apiKey) { headers['Authorization'] = \`Bearer \${apiKey}\`; }
-
-
     const response = await axios.post(endpoint, { query }, { headers });
 
     if (response.data && response.data.errors) {
       console.error("GraphQL errors:", JSON.stringify(response.data.errors));
       throw new Error(`GraphQL errors: ${response.data.errors[0]?.message || 'Unknown GraphQL error'}`);
     }
-
-    const data = response.data?.data;
-    if (!data) {
+    const graphData = response.data?.data;
+    if (!graphData) {
       console.error("No data in response from The Graph:", JSON.stringify(response.data));
       throw new Error('No data returned from Renzo subgraph');
     }
 
-    let tvl = null;
-    let apr = null; // Or APY boost
-
-    // Process Financials Daily Snapshots for TVL and potentially derive APR
-    if (data.financialsDailySnapshots && data.financialsDailySnapshots.length > 0) {
-      tvl = parseFloat(data.financialsDailySnapshots[0].totalValueLockedUSD);
-      // APR calculation can be complex. For now, we'll see if pools data gives a direct APR/reward.
-      // If not, we might need to calculate from daily revenues.
+    // Process Financials Daily Snapshots for TVL
+    if (graphData.financialsDailySnapshots && graphData.financialsDailySnapshots.length > 0) {
+      tvl = parseFloat(graphData.financialsDailySnapshots[0].totalValueLockedUSD);
     }
-
-    // Process Pools data (might give more specific ezETH APY if available)
-    // ezETH is typically the main LST for Renzo.
-    const ezEthPool = data.pools?.find(p => p.outputToken?.symbol === 'ezETH' || p.name?.toLowerCase().includes('ezeth'));
+    // Process Pools data for TVL if not found above, or to refine
+    const ezEthPool = graphData.pools?.find(p => p.outputToken?.symbol === 'ezETH' || p.name?.toLowerCase().includes('ezeth'));
     if (ezEthPool) {
-        if (!tvl) tvl = parseFloat(ezEthPool.totalValueLockedUSD);
-        // Look for reward emissions or other APY indicators.
-        // This is highly schema-dependent. The provided schema was high-level.
-        // For now, let's assume a placeholder if direct APY isn't obvious.
-        console.log("Found ezETH pool:", ezEthPool);
+      if (!tvl) tvl = parseFloat(ezEthPool.totalValueLockedUSD);
+      console.log("Found ezETH pool from The Graph:", ezEthPool);
+      // Future: attempt to derive APR from pool revenues if possible
     }
-
-
-    // Placeholder for APR - DefiLlama is often better for aggregated APYs
-    // This will be refined based on actual subgraph response for rewards.
-
-    console.log(`Renzo data from The Graph: TVL: ${tvl}`);
-    return {
-      tvl: tvl,
-      apyBoost: apr, // This might be called 'apr', 'apy', 'rewardRate', etc.
-      source: 'thegraph-renzo'
-    };
-
-  } catch (error) {
-    console.error('Failed to fetch Renzo data from The Graph:', error.message);
-    if (error.response) {
-      console.error('Response status:', error.response.status);
-      console.error('Response data:', JSON.stringify(error.response.data));
+    if (tvl !== null) {
+      source = 'thegraph-renzo';
+      console.log(`Renzo TVL from The Graph: ${tvl}`);
     }
+  } catch (graphError) {
+    console.error('Failed to fetch Renzo data from The Graph:', graphError.message);
+    if (graphError.response) {
+      console.error('Response status:', graphError.response.status);
+      console.error('Response data:', JSON.stringify(graphError.response.data));
+    }
+    // If The Graph fails, tvl and apr remain null, source remains 'no-data' or previous value
+  }
 
-    console.log("Attempting fallback to DefiLlama API for Renzo...");
+  // If APR is still null (not found via The Graph, or Graph call failed), try DefiLlama
+  if (apr === null) {
+    console.log("Attempting to fetch Renzo APY from DefiLlama API...");
     try {
       const defillamaResponse = await axios.get('https://yields.llama.fi/pools');
       if (defillamaResponse.data && defillamaResponse.data.data) {
         const pools = defillamaResponse.data.data;
-        const renzoPool = pools.find(p =>
+        const renzoPoolLlama = pools.find(p =>
           p.project === 'renzoprotocol' &&
-          p.chain === 'Ethereum' && // Assuming Ethereum, adjust if Blast or other chains are primary
-          p.symbol?.toLowerCase().includes('ezeth') // Common symbol for Renzo's LST
+          (p.chain === 'Ethereum' || p.chain === 'Blast') &&
+          p.symbol?.toLowerCase().includes('ezeth')
         );
 
-        if (renzoPool) {
-          console.log("Successfully fetched Renzo data from DefiLlama API");
-          return {
-            tvl: renzoPool.tvlUsd || null,
-            apyBoost: renzoPool.apyBase || renzoPool.apy || null,
-            source: 'defillama-api-fallback'
-          };
+        if (renzoPoolLlama) {
+          apr = renzoPoolLlama.apyBase || renzoPoolLlama.apy || null;
+          if (apr !== null) {
+            console.log(`Successfully fetched Renzo APY from DefiLlama API: ${apr}`);
+            // If TVL also came from DefiLlama (e.g. graph failed completely) or is missing,
+            // update it and the source.
+            if (tvl === null && renzoPoolLlama.tvlUsd) {
+              tvl = renzoPoolLlama.tvlUsd;
+              source = 'defillama-api-fallback';
+            } else if (source === 'thegraph-renzo' && apr !== null) {
+              source = 'thegraph-tvl-defillama-apy'; // Hybrid source
+            } else if (tvl !== null && apr !== null) {
+               // If TVL was already from graph, and APY is from DefiLlama, it's hybrid
+            } else {
+              source = 'defillama-api-fallback'; // Default to DefiLlama if it provided something
+            }
+          } else {
+               console.warn("Renzo APY not found in DefiLlama pool data.");
+          }
         } else {
-          console.warn("Renzo (ezETH) pool not found on DefiLlama Ethereum.");
+          console.warn("Renzo (ezETH) pool not found on DefiLlama (Ethereum or Blast).");
         }
       }
     } catch (fallbackError) {
-      console.error('Fallback to DefiLlama API for Renzo also failed:', fallbackError.message);
+      console.error('Fallback to DefiLlama API for Renzo APY also failed:', fallbackError.message);
     }
-
-    console.warn("Returning null or empty data for Renzo after all attempts failed.");
-    return {
-      tvl: null,
-      apyBoost: null,
-      source: 'no-data'
-    };
   }
+
+  if (tvl === null && apr === null) {
+      console.warn("Returning null or empty data for Renzo after all attempts failed.");
+  }
+
+  return {
+    tvl: tvl,
+    apyBoost: apr,
+    source: tvl === null && apr === null ? 'no-data' : source
+  };
 }
 
 /**
@@ -235,7 +228,7 @@ export function getRequiredSteps(options) {
     return [
       {
         type: "transaction",
-        description: `Stake ${amount} ${asset} with Renzo for ezETH`,
+        description: 'Stake ' + amount + ' ' + asset + ' with Renzo for ezETH',
         contract: renzoRouterAddress,
         method: "depositETH", // This is a guess, check Renzo docs for actual method
         params: [], // May need recipient address or other params
@@ -248,7 +241,7 @@ export function getRequiredSteps(options) {
     return [
        {
         type: "approval", // If ezETH is an ERC20, approval might be needed
-        description: \`Approve Renzo to spend your ${amount} ezETH\`,
+        description: 'Approve Renzo to spend your ' + amount + ' ' + asset,
         contract: '0xREPLACE_WITH_EZETH_TOKEN_ADDRESS', // ezETH token address
         method: "approve",
         params: [renzoRouterAddress, amount], // spender, amount
@@ -256,7 +249,7 @@ export function getRequiredSteps(options) {
       },
       {
         type: "transaction",
-        description: `Initiate unstake of ${amount} ${asset} from Renzo`,
+        description: 'Initiate unstake of ' + amount + ' ' + asset + ' from Renzo',
         contract: renzoRouterAddress,
         method: "withdrawETH", // Guess, check docs
         params: [amount], // Amount of ezETH to unstake
@@ -268,22 +261,58 @@ export function getRequiredSteps(options) {
 }
 
 // Simple test for getProtocolData
-if (import.meta.url === \`file://\${process.argv[1]}\`) {
+const path = await import('path');
+const url = await import('url');
+const currentFilePath = url.fileURLToPath(import.meta.url);
+const scriptPath = path.resolve(process.argv[1]);
+
+if (currentFilePath === scriptPath) {
   (async () => {
     try {
       console.log("--- Testing Renzo Plugin ---");
       const protocolData = await getProtocolData();
       console.log('Fetched Renzo protocol data:', JSON.stringify(protocolData, null, 2));
 
-      const sampleStrategy = { proposedRoute: ["ETH", "Stake with Renzo"] };
-      const analysisResult = await analyzeStrategy(sampleStrategy, { renzo: protocolData });
-      console.log('\\nAnalysis Result for Renzo strategy:', JSON.stringify(analysisResult, null, 2));
+      console.log("\n--- Testing analyzeStrategy with various scenarios ---");
 
+      const strategiesToTest = [
+        {
+          name: "Direct ETH Restaking via Renzo",
+          strategy: { proposedRoute: ["ETH", "Stake ETH with Renzo for ezETH"] }
+        },
+        {
+          name: "Leveraged Staking Loop involving Renzo",
+          strategy: { proposedRoute: ["Stake ETH with Lido for stETH", "Deposit stETH to Aave", "Borrow ETH from Aave against stETH", "Restake borrowed ETH with Renzo for ezETH"] }
+        },
+        {
+          name: "Simple Lido Staking (No Renzo)",
+          strategy: { proposedRoute: ["Stake ETH with Lido for stETH"] }
+        },
+        {
+          name: "Strategy mentioning Renzo but as part of a broader context",
+          strategy: { proposedRoute: ["Swap USDC to ETH", "Research Renzo protocol", "Decide on staking options"] }
+        }
+      ];
+
+      for (const { name, strategy } of strategiesToTest) {
+        console.log(`\n--- Analyzing Strategy: ${name} ---`);
+        const analysisResult = await analyzeStrategy(strategy, { renzo: protocolData });
+        console.log('Analysis Result:', JSON.stringify(analysisResult, null, 2));
+      }
+
+      console.log("\n--- Testing getRequiredSteps ---");
       const steps = getRequiredSteps({ asset: 'ETH', amount: '1', action: 'stake' });
-      console.log('\\nRequired steps for staking ETH with Renzo:', JSON.stringify(steps, null, 2));
+      console.log('\nRequired steps for staking ETH with Renzo:', JSON.stringify(steps, null, 2));
+
+      const unstakeSteps = getRequiredSteps({ asset: 'ezETH', amount: '10', action: 'unstake' });
+      console.log('\nRequired steps for unstaking ezETH from Renzo:', JSON.stringify(unstakeSteps, null, 2));
+
 
     } catch (err) {
-      console.error('\\nTest failed:', err);
+      console.error('\nTest failed:', err.message);
+      if (err.stack) {
+        console.error(err.stack);
+      }
     }
   })();
 }
